@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Create AUD</title>
+
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/geist-sans@5.1.1/index.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/geist-mono@5.1.1/index.css">
+    <link rel="stylesheet" href="style.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="aud.js"></script>
+</head>
+
+<body>
+
+    <div class="app">
+
+        <header class="topbar">
+            <div class="brand">
+                <div class="brand-icon">A</div>
+                <span>AUD</span>
+            </div>
+
+            <a href="index.html" class="nav-link">
+                Open Player
+            </a>
+        </header>
+
+        <main class="creator">
+
+            <section class="hero">
+                <p class="eyebrow">AUD FORMAT</p>
+
+                <h1>Create your own <span>.aud</span> file.</h1>
+
+                <p class="subtitle">
+                    Package audio, artwork, lyrics, and metadata into one
+                    portable audio file.
+                </p>
+            </section>
+
+            <section class="card">
+
+                <label class="drop-zone" id="audioDropZone">
+
+                    <input
+                    type="file"
+                    id="audioInput"
+                    accept="audio/*"
+                    hidden
+                    >
+
+                    <div class="drop-icon">♪</div>
+
+                    <h2 id="audioName">
+                        Drop an audio file here
+                    </h2>
+
+                    <p>
+                        or click to browse
+                    </p>
+
+                </label>
+
+                <div class="form-grid">
+
+                    <label>
+                        <span>Title</span>
+                        <input
+                        id="titleInput"
+                        type="text"
+                        placeholder="Song title"
+                        >
+                    </label>
+
+                    <label>
+                        <span>Artist</span>
+                        <input
+                        id="artistInput"
+                        type="text"
+                        placeholder="Artist name"
+                        >
+                    </label>
+
+                    <label>
+                        <span>Album</span>
+                        <input
+                        id="albumInput"
+                        type="text"
+                        placeholder="Album name"
+                        >
+                    </label>
+
+                    <label>
+                        <span>Album Artist</span>
+                        <input
+                        id="albumArtistInput"
+                        type="text"
+                        placeholder="Album artist"
+                        >
+                    </label>
+
+                    <label>
+                        <span>Composer</span>
+                        <input
+                        id="composerInput"
+                        type="text"
+                        placeholder="Composer"
+                        >
+                    </label>
+
+                    <label>
+                        <span>Genre</span>
+                        <input
+                        id="genreInput"
+                        type="text"
+                        placeholder="Genre"
+                        >
+                    </label>
+
+                    <label>
+                        <span>Year</span>
+                        <input
+                        id="yearInput"
+                        type="number"
+                        placeholder="2026"
+                        >
+                    </label>
+
+                    <label>
+                        <span>Track Number</span>
+                        <input
+                        id="trackInput"
+                        type="number"
+                        min="1"
+                        placeholder="1"
+                        >
+                    </label>
+
+                    <label>
+                        <span>Disc Number</span>
+                        <input
+                        id="discInput"
+                        type="number"
+                        min="1"
+                        placeholder="1"
+                        >
+                    </label>
+
+                    <label>
+                        <span>Publisher</span>
+                        <input
+                        id="publisherInput"
+                        type="text"
+                        placeholder="Publisher"
+                        >
+                    </label>
+
+                    <label>
+                        <span>Copyright</span>
+                        <input
+                        id="copyrightInput"
+                        type="text"
+                        placeholder="© 2026 Artist"
+                        >
+                    </label>
+
+                    <label>
+                        <span>ISRC</span>
+                        <input
+                        id="isrcInput"
+                        type="text"
+                        placeholder="ISRC code"
+                        >
+                    </label>
+
+                    <label class="full-width">
+                        <span>Comment</span>
+                        <textarea
+                        id="commentInput"
+                        placeholder="Additional notes..."
+                        ></textarea>
+                    </label>
+
+                </div>
+
+                <div class="attachments">
+
+                    <label class="file-button">
+                        <input
+                        type="file"
+                        id="coverInput"
+                        accept="image/*"
+                        hidden
+                        >
+
+                        <span>🖼</span>
+                        <strong>Artwork</strong>
+                        <small id="coverName">Optional</small>
+                    </label>
+
+                    <label class="file-button">
+                        <input
+                        type="file"
+                        id="lyricsInput"
+                        accept=".lrc,.txt"
+                        hidden
+                        >
+
+                        <span>♫</span>
+                        <strong>Lyrics</strong>
+                        <small id="lyricsName">Optional .lrc</small>
+                    </label>
+
+                </div>
+
+                <button
+                class="primary-button"
+                id="createButton"
+                >
+                Create .aud
+            </button>
+
+            <p
+            class="status"
+            id="status"
+            ></p>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script>
+
+    const audioInput = document.getElementById("audioInput");
+    const coverInput = document.getElementById("coverInput");
+    const lyricsInput = document.getElementById("lyricsInput");
+
+    const audioDropZone = document.getElementById("audioDropZone");
+
+    const audioName = document.getElementById("audioName");
+    const coverName = document.getElementById("coverName");
+    const lyricsName = document.getElementById("lyricsName");
+
+    const createButton = document.getElementById("createButton");
+    const status = document.getElementById("status");
+
+    function handleAudioFile(file) {
+
+        if (!file) return;
+
+        if (!file.type.startsWith("audio/")) {
+
+            status.textContent =
+            "Please drop an audio file.";
+
+            return;
+        }
+
+        const dataTransfer =
+        new DataTransfer();
+
+        dataTransfer.items.add(file);
+
+        audioInput.files =
+        dataTransfer.files;
+
+        audioName.textContent =
+        file.name;
+
+        const titleInput =
+        document.getElementById("titleInput");
+
+        if (!titleInput.value) {
+
+            titleInput.value =
+            file.name.replace(/\.[^/.]+$/, "");
+
+        }
+
+        status.textContent = "";
+    }
+
+    audioDropZone.addEventListener(
+        "dragover",
+        event => {
+
+            event.preventDefault();
+
+            event.dataTransfer.dropEffect =
+            "copy";
+
+            audioDropZone.classList.add(
+                "dragging"
+                );
+
+        }
+        );
+
+    audioDropZone.addEventListener(
+        "dragleave",
+        event => {
+
+            if (
+                !audioDropZone.contains(
+                    event.relatedTarget
+                    )
+                ) {
+
+                audioDropZone.classList.remove(
+                    "dragging"
+                    );
+
+        }
+
+    }
+    );
+
+    audioDropZone.addEventListener(
+        "drop",
+        event => {
+
+            event.preventDefault();
+
+            audioDropZone.classList.remove(
+                "dragging"
+                );
+
+            const file =
+            event.dataTransfer.files[0];
+
+            handleAudioFile(file);
+
+        }
+        );
+
+    audioInput.addEventListener(
+        "change",
+        () => {
+
+            handleAudioFile(
+                audioInput.files[0]
+                );
+
+        }
+        );
+    lyricsInput.addEventListener("change", () => {
+        const file = lyricsInput.files[0];
+
+        if (file) {
+            lyricsName.textContent = file.name;
+        }
+    });
+
+    createButton.addEventListener("click", async () => {
+
+        const audioFile = audioInput.files[0];
+
+        if (!audioFile) {
+            status.textContent = "Please choose an audio file first.";
+            return;
+        }
+
+        createButton.disabled = true;
+        createButton.textContent = "Creating...";
+
+        try {
+
+            const audBlob = await createAUD({
+                audioFile,
+                coverFile: coverInput.files[0] || null,
+                lyricsFile: lyricsInput.files[0] || null,
+
+                metadata: {
+                    title: document.getElementById("titleInput").value,
+                    artist: document.getElementById("artistInput").value,
+                    album: document.getElementById("albumInput").value,
+
+                    albumArtist:
+                    document.getElementById("albumArtistInput").value,
+
+                    composer:
+                    document.getElementById("composerInput").value,
+
+                    genre:
+                    document.getElementById("genreInput").value,
+
+                    year:
+                    document.getElementById("yearInput").value,
+
+                    track:
+                    document.getElementById("trackInput").value,
+
+                    disc:
+                    document.getElementById("discInput").value,
+
+                    publisher:
+                    document.getElementById("publisherInput").value,
+
+                    copyright:
+                    document.getElementById("copyrightInput").value,
+
+                    isrc:
+                    document.getElementById("isrcInput").value,
+
+                    comment:
+                    document.getElementById("commentInput").value
+                }
+            });
+
+            const title =
+            document.getElementById("titleInput").value ||
+            audioFile.name.replace(/\.[^/.]+$/, "");
+
+            downloadBlob(
+                audBlob,
+            `${title}.aud`
+            );
+
+            status.textContent = "Your .aud file was created.";
+
+        } catch (error) {
+
+            console.error(error);
+
+            status.textContent =
+            "Something went wrong while creating the .aud file.";
+
+        } finally {
+
+            createButton.disabled = false;
+            createButton.textContent = "Create .aud";
+
+        }
+
+    });
+
+</script>
+
+</body>
+</html>

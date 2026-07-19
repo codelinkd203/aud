@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AUD Player</title>
+
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/geist-sans@5.1.1/index.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/geist-mono@5.1.1/index.css">
+    <link rel="stylesheet" href="style.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="aud.js"></script>
+</head>
+
+<body>
+
+    <div class="player-app">
+
+        <header class="topbar">
+
+            <div class="brand">
+                <div class="brand-icon">A</div>
+                <span>AUD</span>
+            </div>
+
+            <a href="create.html" class="nav-link">
+                Create .aud
+            </a>
+
+        </header>
+
+        <main class="player">
+
+            <input
+            type="file"
+            id="audInput"
+            accept=".aud"
+            hidden
+            >
+
+            <section
+            class="empty-state"
+            id="emptyState"
+            >
+
+            <div class="big-icon">♪</div>
+
+            <h1>Open an .aud file</h1>
+
+            <p>
+                Drop an AUD file here or choose one from your computer.
+            </p>
+
+            <button
+            class="primary-button"
+            id="openButton"
+            >
+            Choose .aud File
+        </button>
+
+    </section>
+
+    <section
+    class="now-playing hidden"
+    id="nowPlaying"
+    >
+
+    <div class="artwork-frame">
+        <div
+        class="artwork"
+        id="artwork"
+        >
+        <span>♪</span>
+    </div>
+</div>
+
+<div class="song-info">
+
+    <p class="eyebrow">
+        <span class="eq-bars" id="eqBars"><span></span><span></span><span></span></span>NOW PLAYING
+    </p>
+
+    <h1 id="songTitle">
+        Unknown Title
+    </h1>
+
+    <p id="songArtist">
+        Unknown Artist
+    </p>
+
+</div>
+
+<div class="progress-container">
+
+    <div class="progress-track">
+        <input
+        type="range"
+        id="progress"
+        min="0"
+        max="100"
+        value="0"
+        >
+    </div>
+
+    <div class="time-row">
+        <span id="currentTime">0:00</span>
+        <span id="duration">0:00</span>
+    </div>
+
+</div>
+
+<div class="controls">
+
+    <button id="backButton">
+        ↶
+    </button>
+
+    <button
+    class="play-button"
+    id="playButton"
+    >
+    ▶
+</button>
+
+<button id="forwardButton">
+    ↷
+</button>
+
+</div>
+
+<button
+class="info-button"
+id="infoButton"
+>
+ⓘ Show Info
+</button>
+
+<section
+class="info-panel hidden"
+id="infoPanel"
+>
+
+<div class="info-header">
+    <h2>File Information</h2>
+
+    <button id="closeInfoButton">
+        ×
+    </button>
+</div>
+
+<div class="metadata-grid">
+
+    <div class="metadata-item">
+        <span>Title</span>
+        <strong id="infoTitle">—</strong>
+    </div>
+
+    <div class="metadata-item">
+        <span>Artist</span>
+        <strong id="infoArtist">—</strong>
+    </div>
+
+    <div class="metadata-item">
+        <span>Album</span>
+        <strong id="infoAlbum">—</strong>
+    </div>
+
+    <div class="metadata-item">
+        <span>Album Artist</span>
+        <strong id="infoAlbumArtist">—</strong>
+    </div>
+
+    <div class="metadata-item">
+        <span>Composer</span>
+        <strong id="infoComposer">—</strong>
+    </div>
+
+    <div class="metadata-item">
+        <span>Genre</span>
+        <strong id="infoGenre">—</strong>
+    </div>
+
+    <div class="metadata-item">
+        <span>Year</span>
+        <strong id="infoYear">—</strong>
+    </div>
+
+    <div class="metadata-item">
+        <span>Track</span>
+        <strong id="infoTrack">—</strong>
+    </div>
+
+    <div class="metadata-item">
+        <span>Disc</span>
+        <strong id="infoDisc">—</strong>
+    </div>
+
+    <div class="metadata-item">
+        <span>Publisher</span>
+        <strong id="infoPublisher">—</strong>
+    </div>
+
+    <div class="metadata-item">
+        <span>Copyright</span>
+        <strong id="infoCopyright">—</strong>
+    </div>
+
+    <div class="metadata-item">
+        <span>ISRC</span>
+        <strong id="infoISRC">—</strong>
+    </div>
+
+    <div class="metadata-item full-width">
+        <span>Comment</span>
+        <strong id="infoComment">—</strong>
+    </div>
+
+    <div class="metadata-item full-width">
+        <span>Original Filename</span>
+        <strong id="infoFilename">—</strong>
+    </div>
+
+    <div class="metadata-item full-width">
+        <span>Audio Type</span>
+        <strong id="infoAudioType">—</strong>
+    </div>
+
+</div>
+
+</section>
+
+<section
+class="lyrics hidden"
+id="lyrics"
+></section>
+
+<audio id="audio"></audio>
+
+</section>
+
+</main>
+
+</div>
+
+<script>
+
+    const audInput = document.getElementById("audInput");
+    const openButton = document.getElementById("openButton");
+
+    const emptyState = document.getElementById("emptyState");
+    const nowPlaying = document.getElementById("nowPlaying");
+
+    const audio = document.getElementById("audio");
+
+    const artwork = document.getElementById("artwork");
+    const songTitle = document.getElementById("songTitle");
+    const songArtist = document.getElementById("songArtist");
+
+    const playButton = document.getElementById("playButton");
+
+    const progress = document.getElementById("progress");
+    const currentTime = document.getElementById("currentTime");
+    const duration = document.getElementById("duration");
+
+    const infoButton =
+    document.getElementById("infoButton");
+
+    const infoPanel =
+    document.getElementById("infoPanel");
+
+    const closeInfoButton =
+    document.getElementById("closeInfoButton");
+
+    const lyricsContainer = document.getElementById("lyrics");
+
+    let lyrics = [];
+    let artworkURL = null;
+    let audioURL = null;
+
+    openButton.addEventListener("click", () => {
+        audInput.click();
+    });
+
+    audInput.addEventListener("change", () => {
+        const file = audInput.files[0];
+
+        if (file) {
+            loadAUD(file);
+        }
+    });
+
+    function setInfoValue(id, value) {
+
+        const element =
+        document.getElementById(id);
+
+        element.textContent =
+        value !== undefined &&
+        value !== null &&
+        value !== ""
+        ? value
+        : "—";
+
+    }
+
+    async function loadAUD(file) {
+
+        try {
+
+            const result = await openAUD(file);
+
+            if (!result.audioBlob) {
+                throw new Error(
+                    "This .aud file does not contain audiobytes."
+                    );
+            }
+
+        // Clean up old URLs.
+            if (audioURL) {
+                URL.revokeObjectURL(audioURL);
+            }
+
+            if (artworkURL) {
+                URL.revokeObjectURL(artworkURL);
+            }
+
+            audioURL = URL.createObjectURL(
+                result.audioBlob
+                );
+
+            audio.src = audioURL;
+            audio.pause();
+
+            playButton.textContent = "▶";
+            playerAppEl.classList.remove("is-playing");
+
+            progress.value = 0;
+            progress.style.setProperty("--progress", 0);
+            currentTime.textContent = "0:00";
+
+        // Metadata.
+            songTitle.textContent =
+            result.metadata.title ||
+            file.name.replace(/\.aud$/i, "");
+
+            songArtist.textContent =
+            result.metadata.artist ||
+            "Unknown Artist";
+
+            const metadata =
+            result.metadata;
+
+            setInfoValue(
+                "infoTitle",
+                metadata.title
+                );
+
+            setInfoValue(
+                "infoArtist",
+                metadata.artist
+                );
+
+            setInfoValue(
+                "infoAlbum",
+                metadata.album
+                );
+
+            setInfoValue(
+                "infoAlbumArtist",
+                metadata.albumArtist
+                );
+
+            setInfoValue(
+                "infoComposer",
+                metadata.composer
+                );
+
+            setInfoValue(
+                "infoGenre",
+                metadata.genre
+                );
+
+            setInfoValue(
+                "infoYear",
+                metadata.year
+                );
+
+            setInfoValue(
+                "infoTrack",
+                metadata.track
+                );
+
+            setInfoValue(
+                "infoDisc",
+                metadata.disc
+                );
+
+            setInfoValue(
+                "infoPublisher",
+                metadata.publisher
+                );
+
+            setInfoValue(
+                "infoCopyright",
+                metadata.copyright
+                );
+
+            setInfoValue(
+                "infoISRC",
+                metadata.isrc
+                );
+
+            setInfoValue(
+                "infoComment",
+                metadata.comment
+                );
+
+            setInfoValue(
+                "infoFilename",
+                metadata.originalFilename
+                );
+
+            setInfoValue(
+                "infoAudioType",
+                metadata.audioType
+                );
+
+        // Artwork.
+            if (result.artworkBlob) {
+
+                artworkURL = URL.createObjectURL(
+                    result.artworkBlob
+                    );
+
+                artwork.style.backgroundImage =
+            `url("${artworkURL}")`;
+
+            artwork.classList.add("has-image");
+
+            artwork.querySelector("span").style.display =
+            "none";
+
+        } else {
+
+            artwork.style.backgroundImage = "";
+            artwork.classList.remove("has-image");
+
+            artwork.querySelector("span").style.display =
+            "block";
+        }
+
+        // Lyrics.
+        if (result.lyrics) {
+
+            lyrics = parseLRC(result.lyrics);
+
+            lyricsContainer.classList.remove("hidden");
+
+            renderLyrics();
+
+        } else {
+
+            lyrics = [];
+
+            lyricsContainer.classList.add("hidden");
+
+        }
+
+        emptyState.classList.add("hidden");
+        nowPlaying.classList.remove("hidden");
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "Could not open this .aud file:\n\n" +
+            error.message
+            );
+
+    }
+
+}
+
+function renderLyrics() {
+
+    lyricsContainer.innerHTML = "";
+
+    for (const lyric of lyrics) {
+
+        const line = document.createElement("div");
+
+        line.className = "lyric-line";
+        line.textContent = lyric.text;
+
+        line.dataset.time = lyric.time;
+
+        lyricsContainer.appendChild(line);
+
+    }
+
+}
+
+const playerAppEl = document.querySelector(".player-app");
+
+playButton.addEventListener("click", () => {
+
+    if (audio.paused) {
+
+        audio.play();
+        playButton.textContent = "Ⅱ";
+        playerAppEl.classList.add("is-playing");
+
+    } else {
+
+        audio.pause();
+        playButton.textContent = "▶";
+        playerAppEl.classList.remove("is-playing");
+
+    }
+
+});
+
+audio.addEventListener("loadedmetadata", () => {
+
+    duration.textContent =
+    formatTime(audio.duration);
+
+});
+
+audio.addEventListener("timeupdate", () => {
+
+    if (audio.duration) {
+
+        progress.value =
+        (audio.currentTime / audio.duration) * 100;
+
+        progress.style.setProperty(
+            "--progress",
+            progress.value
+            );
+
+    }
+
+    currentTime.textContent =
+    formatTime(audio.currentTime);
+
+    updateLyrics();
+
+});
+
+progress.addEventListener("input", () => {
+
+    progress.style.setProperty(
+        "--progress",
+        progress.value
+        );
+
+    if (!audio.duration) return;
+
+    audio.currentTime =
+    (progress.value / 100) * audio.duration;
+
+});
+
+document.getElementById("backButton")
+.addEventListener("click", () => {
+
+    audio.currentTime =
+    Math.max(0, audio.currentTime - 10);
+
+});
+
+document.getElementById("forwardButton")
+.addEventListener("click", () => {
+
+    audio.currentTime =
+    Math.min(
+        audio.duration,
+        audio.currentTime + 10
+        );
+
+});
+
+audio.addEventListener("ended", () => {
+
+    playButton.textContent = "▶";
+    playerAppEl.classList.remove("is-playing");
+
+});
+
+document.addEventListener("keydown", event => {
+
+    if (event.code !== "Space") return;
+
+    const tag = document.activeElement.tagName;
+
+    if (tag === "INPUT" || tag === "TEXTAREA") return;
+
+    if (nowPlaying.classList.contains("hidden")) return;
+
+    event.preventDefault();
+    playButton.click();
+
+});
+
+const playerApp =
+document.querySelector(".player-app");
+
+playerApp.addEventListener(
+    "dragover",
+    event => {
+
+        event.preventDefault();
+
+        playerApp.classList.add(
+            "dragging"
+            );
+
+    }
+    );
+
+playerApp.addEventListener(
+    "dragleave",
+    event => {
+
+        if (
+            !playerApp.contains(
+                event.relatedTarget
+                )
+            ) {
+
+            playerApp.classList.remove(
+                "dragging"
+                );
+
+    }
+
+}
+);
+
+playerApp.addEventListener(
+    "drop",
+    event => {
+
+        event.preventDefault();
+
+        playerApp.classList.remove(
+            "dragging"
+            );
+
+        const file =
+        event.dataTransfer.files[0];
+
+        if (!file) return;
+
+        if (
+            !file.name
+            .toLowerCase()
+            .endsWith(".aud")
+            ) {
+
+            alert(
+                "Please drop a .aud file."
+                );
+
+        return;
+    }
+
+    loadAUD(file);
+
+}
+);
+
+infoButton.addEventListener("click", () => {
+
+    infoPanel.classList.toggle("hidden");
+
+    infoButton.textContent =
+    infoPanel.classList.contains("hidden")
+    ? "ⓘ Show Info"
+    : "ⓘ Hide Info";
+
+});
+
+closeInfoButton.addEventListener("click", () => {
+
+    infoPanel.classList.add("hidden");
+
+    infoButton.textContent =
+    "ⓘ Show Info";
+
+});
+
+function updateLyrics() {
+
+    if (!lyrics.length) return;
+
+    let activeIndex = -1;
+
+    for (let i = 0; i < lyrics.length; i++) {
+
+        if (
+            audio.currentTime >= lyrics[i].time
+            ) {
+            activeIndex = i;
+        }
+
+    }
+
+    const lines =
+    lyricsContainer.querySelectorAll(".lyric-line");
+
+    lines.forEach((line, index) => {
+
+        line.classList.toggle(
+            "active",
+            index === activeIndex
+            );
+
+    });
+
+    if (activeIndex >= 0) {
+
+        lines[activeIndex].scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+        });
+
+    }
+
+}
+
+function formatTime(seconds) {
+
+    if (!Number.isFinite(seconds)) {
+        return "0:00";
+    }
+
+    const minutes =
+    Math.floor(seconds / 60);
+
+    const remaining =
+    Math.floor(seconds % 60)
+    .toString()
+    .padStart(2, "0");
+
+    return `${minutes}:${remaining}`;
+
+}
+
+</script>
+
+</body>
+</html>

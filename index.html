@@ -453,6 +453,8 @@ id="lyrics"
         }
 
         // Lyrics.
+        lastActiveLyricIndex = -1;
+
         if (result.lyrics) {
 
             lyrics = parseLRC(result.lyrics);
@@ -695,6 +697,8 @@ closeInfoButton.addEventListener("click", () => {
 
 });
 
+let lastActiveLyricIndex = -1;
+
 function updateLyrics() {
 
     if (!lyrics.length) return;
@@ -710,6 +714,10 @@ function updateLyrics() {
         }
 
     }
+
+    if (activeIndex === lastActiveLyricIndex) return;
+
+    lastActiveLyricIndex = activeIndex;
 
     const lines =
     lyricsContainer.querySelectorAll(".lyric-line");

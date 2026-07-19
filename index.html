@@ -733,9 +733,20 @@ function updateLyrics() {
 
     if (activeIndex >= 0) {
 
-        lines[activeIndex].scrollIntoView({
-            behavior: "smooth",
-            block: "center"
+        const activeLine = lines[activeIndex];
+
+        const containerRect = lyricsContainer.getBoundingClientRect();
+        const lineRect = activeLine.getBoundingClientRect();
+
+        const targetScrollTop =
+        lyricsContainer.scrollTop +
+        (lineRect.top - containerRect.top) -
+        (lyricsContainer.clientHeight / 2) +
+        (lineRect.height / 2);
+
+        lyricsContainer.scrollTo({
+            top: targetScrollTop,
+            behavior: "smooth"
         });
 
     }

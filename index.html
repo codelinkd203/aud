@@ -22,7 +22,15 @@
         <header class="topbar">
 
             <div class="brand">
-                <div class="brand-icon">A</div>
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+                        <rect x="3" y="9" width="2.4" height="6" rx="1.2" fill="currentColor"/>
+                        <rect x="7.4" y="5.5" width="2.4" height="13" rx="1.2" fill="currentColor"/>
+                        <rect x="11.8" y="2" width="2.4" height="20" rx="1.2" fill="currentColor"/>
+                        <rect x="16.2" y="6.5" width="2.4" height="11" rx="1.2" fill="currentColor"/>
+                        <rect x="20.6" y="10" width="2.4" height="4" rx="1.2" fill="currentColor"/>
+                    </svg>
+                </div>
                 <span>AUD</span>
             </div>
 
@@ -84,7 +92,7 @@
     </p>
 
     <h1 id="songTitle">
-        Unknown Title
+        <span class="explicit-badge hidden" id="explicitBadge" title="Explicit">E</span><span id="songTitleText">Unknown Title</span>
     </h1>
 
     <p id="songArtist">
@@ -256,7 +264,8 @@ id="lyrics"
     const audio = document.getElementById("audio");
 
     const artwork = document.getElementById("artwork");
-    const songTitle = document.getElementById("songTitle");
+    const songTitle = document.getElementById("songTitleText");
+    const explicitBadge = document.getElementById("explicitBadge");
     const songArtist = document.getElementById("songArtist");
 
     const playButton = document.getElementById("playButton");
@@ -345,6 +354,11 @@ id="lyrics"
             songTitle.textContent =
             result.metadata.title ||
             file.name.replace(/\.aud$/i, "");
+
+            explicitBadge.classList.toggle(
+                "hidden",
+                !result.metadata.explicit
+                );
 
             songArtist.textContent =
             result.metadata.artist ||

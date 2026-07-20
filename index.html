@@ -139,12 +139,23 @@
 
 </div>
 
-<button
-class="info-button"
-id="infoButton"
->
-ⓘ Show Info
-</button>
+<div class="secondary-buttons">
+
+    <button
+    class="info-button"
+    id="infoButton"
+    >
+    ⓘ Show Info
+    </button>
+
+    <button
+    class="info-button hidden"
+    id="lyricsButton"
+    >
+    ♫ Show Lyrics
+    </button>
+
+</div>
 
 <section
 class="info-panel hidden"
@@ -292,6 +303,9 @@ id="lyrics"
 
     const closeInfoButton =
     document.getElementById("closeInfoButton");
+
+    const lyricsButton =
+    document.getElementById("lyricsButton");
 
     const lyricsContainer = document.getElementById("lyrics");
 
@@ -489,19 +503,22 @@ id="lyrics"
         // Lyrics.
         lastActiveLyricIndex = -1;
 
+        lyricsContainer.classList.add("hidden");
+        lyricsButton.textContent = "♫ Show Lyrics";
+
         if (result.lyrics) {
 
             lyrics = parseLRC(result.lyrics);
 
-            lyricsContainer.classList.remove("hidden");
-
             renderLyrics();
+
+            lyricsButton.classList.remove("hidden");
 
         } else {
 
             lyrics = [];
 
-            lyricsContainer.classList.add("hidden");
+            lyricsButton.classList.add("hidden");
 
         }
 
@@ -728,6 +745,17 @@ closeInfoButton.addEventListener("click", () => {
 
     infoButton.textContent =
     "ⓘ Show Info";
+
+});
+
+lyricsButton.addEventListener("click", () => {
+
+    lyricsContainer.classList.toggle("hidden");
+
+    lyricsButton.textContent =
+    lyricsContainer.classList.contains("hidden")
+    ? "♫ Show Lyrics"
+    : "♫ Hide Lyrics";
 
 });
 

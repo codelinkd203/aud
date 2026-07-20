@@ -826,6 +826,22 @@ input[type="range"]:active::-moz-range-thumb {
     50% { transform: scaleY(1); }
 }
 
+.secondary-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 10px;
+
+    margin-top: 8px;
+
+    flex-wrap: wrap;
+}
+
+.secondary-buttons .info-button {
+    margin-top: 0;
+}
+
 .info-button {
     display: inline-flex;
     align-items: center;

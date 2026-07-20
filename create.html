@@ -198,21 +198,42 @@
                         <small class="char-count" id="commentCount">0 / 500</small>
                     </label>
 
-                    <div class="full-width toggle-row">
-                        <div class="toggle-label">
-                            <strong>Explicit content</strong>
-                            <small>Shows an <span class="explicit-badge">E</span> badge in the player</small>
+                    <div class="full-width toggle-pair">
+
+                        <div class="toggle-row">
+                            <div class="toggle-label">
+                                <strong>Explicit content</strong>
+                                <small>Shows an <span class="explicit-badge">E</span> badge in the player</small>
+                            </div>
+
+                            <button
+                            type="button"
+                            class="toggle-switch"
+                            id="explicitToggle"
+                            role="switch"
+                            aria-checked="false"
+                            >
+                                <span class="toggle-knob"></span>
+                            </button>
                         </div>
 
-                        <button
-                        type="button"
-                        class="toggle-switch"
-                        id="explicitToggle"
-                        role="switch"
-                        aria-checked="false"
-                        >
-                            <span class="toggle-knob"></span>
-                        </button>
+                        <div class="toggle-row">
+                            <div class="toggle-label">
+                                <strong>Compilation</strong>
+                                <small>Track is part of a various-artists compilation</small>
+                            </div>
+
+                            <button
+                            type="button"
+                            class="toggle-switch"
+                            id="compilationToggle"
+                            role="switch"
+                            aria-checked="false"
+                            >
+                                <span class="toggle-knob"></span>
+                            </button>
+                        </div>
+
                     </div>
 
                 </div>
@@ -311,6 +332,7 @@
     const lyricsName = document.getElementById("lyricsName");
 
     const explicitToggle = document.getElementById("explicitToggle");
+    const compilationToggle = document.getElementById("compilationToggle");
     const lyricsToggle = document.getElementById("lyricsToggle");
 
     const commentInput = document.getElementById("commentInput");
@@ -342,6 +364,11 @@
 
     explicitToggle.addEventListener("click", () => {
         setToggle(explicitToggle, !isToggled(explicitToggle));
+        saveDraft();
+    });
+
+    compilationToggle.addEventListener("click", () => {
+        setToggle(compilationToggle, !isToggled(compilationToggle));
         saveDraft();
     });
 
@@ -634,6 +661,7 @@
         });
 
         draft.explicit = isToggled(explicitToggle);
+        draft.compilation = isToggled(compilationToggle);
 
         try {
             localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
@@ -664,6 +692,7 @@
             });
 
             if (draft.explicit) setToggle(explicitToggle, true);
+            if (draft.compilation) setToggle(compilationToggle, true);
 
             commentCount.textContent = `${commentInput.value.length} / 500`;
 
@@ -705,6 +734,7 @@
         setToggle(lyricsToggle, false);
 
         setToggle(explicitToggle, false);
+        setToggle(compilationToggle, false);
 
         commentCount.textContent = "0 / 500";
 
@@ -782,7 +812,10 @@
                     document.getElementById("commentInput").value,
 
                     explicit:
-                    isToggled(explicitToggle)
+                    isToggled(explicitToggle),
+
+                    compilation:
+                    isToggled(compilationToggle)
                 }
             });
 

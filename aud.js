@@ -43,6 +43,7 @@ async function createAUD({
         isrc: metadata.isrc || "",
 
         comment: metadata.comment || "",
+        explicit: Boolean(metadata.explicit),
 
         audioType: audioFile.type || "audio/mpeg",
         originalFilename: audioFile.name,

@@ -1015,6 +1015,8 @@ input[type="range"]:active::-moz-range-thumb {
 }
 
 .required-mark {
+    display: inline;
+
     color: var(--accent);
     font-weight: 700;
 }
@@ -1045,6 +1047,24 @@ input[type="range"]:active::-moz-range-thumb {
     font-family: var(--font-mono);
     font-size: 11px;
     text-align: right;
+}
+
+.toggle-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.toggle-pair .toggle-row {
+    height: 100%;
+}
+
+@media (max-width: 600px) {
+
+    .toggle-pair {
+        grid-template-columns: 1fr;
+    }
+
 }
 
 .toggle-row {
@@ -1259,7 +1279,7 @@ input[type="range"]:active::-moz-range-thumb {
     grid-template-columns: 1fr 1fr;
 }
 
-.form-grid label.full-width {
+.form-grid .full-width {
     grid-column: span 2;
 }
 

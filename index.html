@@ -221,6 +221,16 @@ id="infoPanel"
         <strong id="infoISRC">—</strong>
     </div>
 
+    <div class="metadata-item">
+        <span>Explicit</span>
+        <strong id="infoExplicit">—</strong>
+    </div>
+
+    <div class="metadata-item">
+        <span>Compilation</span>
+        <strong id="infoCompilation">—</strong>
+    </div>
+
     <div class="metadata-item full-width">
         <span>Comment</span>
         <strong id="infoComment">—</strong>
@@ -425,6 +435,16 @@ id="lyrics"
             setInfoValue(
                 "infoISRC",
                 metadata.isrc
+                );
+
+            setInfoValue(
+                "infoExplicit",
+                metadata.explicit ? "Yes" : "No"
+                );
+
+            setInfoValue(
+                "infoCompilation",
+                metadata.compilation ? "Yes" : "No"
                 );
 
             setInfoValue(

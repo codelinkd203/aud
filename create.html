@@ -21,7 +21,15 @@
 
         <header class="topbar">
             <div class="brand">
-                <div class="brand-icon">A</div>
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+                        <rect x="3" y="9" width="2.4" height="6" rx="1.2" fill="currentColor"/>
+                        <rect x="7.4" y="5.5" width="2.4" height="13" rx="1.2" fill="currentColor"/>
+                        <rect x="11.8" y="2" width="2.4" height="20" rx="1.2" fill="currentColor"/>
+                        <rect x="16.2" y="6.5" width="2.4" height="11" rx="1.2" fill="currentColor"/>
+                        <rect x="20.6" y="10" width="2.4" height="4" rx="1.2" fill="currentColor"/>
+                    </svg>
+                </div>
                 <span>AUD</span>
             </div>
 
@@ -61,15 +69,17 @@
                     </h2>
 
                     <p>
-                        or click to browse
+                        or click to browse <span class="required-mark" title="Required">*</span>
                     </p>
+
+                    <p class="file-meta hidden" id="audioMeta"></p>
 
                 </label>
 
                 <div class="form-grid">
 
                     <label>
-                        <span>Title</span>
+                        <span>Title <span class="required-mark" title="Required">*</span></span>
                         <input
                         id="titleInput"
                         type="text"
@@ -78,7 +88,7 @@
                     </label>
 
                     <label>
-                        <span>Artist</span>
+                        <span>Artist <span class="required-mark" title="Required">*</span></span>
                         <input
                         id="artistInput"
                         type="text"
@@ -183,14 +193,33 @@
                         <textarea
                         id="commentInput"
                         placeholder="Additional notes..."
+                        maxlength="500"
                         ></textarea>
+                        <small class="char-count" id="commentCount">0 / 500</small>
                     </label>
+
+                    <div class="full-width toggle-row">
+                        <div class="toggle-label">
+                            <strong>Explicit content</strong>
+                            <small>Shows an <span class="explicit-badge">E</span> badge in the player</small>
+                        </div>
+
+                        <button
+                        type="button"
+                        class="toggle-switch"
+                        id="explicitToggle"
+                        role="switch"
+                        aria-checked="false"
+                        >
+                            <span class="toggle-knob"></span>
+                        </button>
+                    </div>
 
                 </div>
 
                 <div class="attachments">
 
-                    <label class="file-button">
+                    <label class="file-button" id="coverButton">
                         <input
                         type="file"
                         id="coverInput"
@@ -198,32 +227,61 @@
                         hidden
                         >
 
-                        <span>🖼</span>
+                        <span class="cover-thumb" id="coverThumb">🖼</span>
                         <strong>Artwork</strong>
-                        <small id="coverName">Optional</small>
+                        <small id="coverName">Optional — drop or click</small>
                     </label>
 
-                    <label class="file-button">
-                        <input
-                        type="file"
-                        id="lyricsInput"
-                        accept=".lrc,.txt"
-                        hidden
+                    <div class="toggle-row toggle-row--compact">
+                        <div class="toggle-label">
+                            <strong>Lyrics</strong>
+                            <small>Attach a synced .lrc file</small>
+                        </div>
+
+                        <button
+                        type="button"
+                        class="toggle-switch"
+                        id="lyricsToggle"
+                        role="switch"
+                        aria-checked="false"
                         >
-
-                        <span>♫</span>
-                        <strong>Lyrics</strong>
-                        <small id="lyricsName">Optional .lrc</small>
-                    </label>
+                            <span class="toggle-knob"></span>
+                        </button>
+                    </div>
 
                 </div>
 
+                <label class="file-button lyrics-drop hidden" id="lyricsButton">
+                    <input
+                    type="file"
+                    id="lyricsInput"
+                    accept=".lrc,.txt"
+                    hidden
+                    >
+
+                    <span>♫</span>
+                    <strong>Lyrics file</strong>
+                    <small id="lyricsName">Drop a .lrc file or click to browse</small>
+                </label>
+
+                <div class="button-row">
+
+                    <button
+                    class="primary-button"
+                    id="createButton"
+                    >
+                    Create .aud
+                </button>
+
                 <button
-                class="primary-button"
-                id="createButton"
+                type="button"
+                class="secondary-button"
+                id="clearButton"
                 >
-                Create .aud
+                Clear form
             </button>
+
+        </div>
 
             <p
             class="status"
@@ -243,13 +301,120 @@
     const lyricsInput = document.getElementById("lyricsInput");
 
     const audioDropZone = document.getElementById("audioDropZone");
+    const coverButton = document.getElementById("coverButton");
+    const lyricsButton = document.getElementById("lyricsButton");
 
     const audioName = document.getElementById("audioName");
+    const audioMeta = document.getElementById("audioMeta");
     const coverName = document.getElementById("coverName");
+    const coverThumb = document.getElementById("coverThumb");
     const lyricsName = document.getElementById("lyricsName");
 
+    const explicitToggle = document.getElementById("explicitToggle");
+    const lyricsToggle = document.getElementById("lyricsToggle");
+
+    const commentInput = document.getElementById("commentInput");
+    const commentCount = document.getElementById("commentCount");
+
     const createButton = document.getElementById("createButton");
+    const clearButton = document.getElementById("clearButton");
     const status = document.getElementById("status");
+
+    const FIELD_IDS = [
+        "titleInput", "artistInput", "albumInput", "albumArtistInput",
+        "composerInput", "genreInput", "yearInput", "trackInput",
+        "discInput", "publisherInput", "copyrightInput", "isrcInput",
+        "commentInput"
+    ];
+
+    const DRAFT_KEY = "aud-create-draft";
+
+    // --- Toggle switches ---
+
+    function setToggle(button, on) {
+        button.classList.toggle("on", on);
+        button.setAttribute("aria-checked", String(on));
+    }
+
+    function isToggled(button) {
+        return button.classList.contains("on");
+    }
+
+    explicitToggle.addEventListener("click", () => {
+        setToggle(explicitToggle, !isToggled(explicitToggle));
+        saveDraft();
+    });
+
+    lyricsToggle.addEventListener("click", () => {
+        const on = !isToggled(lyricsToggle);
+        setToggle(lyricsToggle, on);
+        lyricsButton.classList.toggle("hidden", !on);
+
+        if (!on) {
+            lyricsInput.value = "";
+            lyricsName.textContent = "Drop a .lrc file or click to browse";
+        }
+    });
+
+    // --- Required-field validation ---
+
+    function clearFieldError(el) {
+        el.classList.remove("field-error");
+    }
+
+    function markFieldError(el) {
+        el.classList.add("field-error");
+    }
+
+    function validateForm() {
+        let firstInvalid = null;
+
+        clearFieldError(audioDropZone);
+        clearFieldError(document.getElementById("titleInput"));
+        clearFieldError(document.getElementById("artistInput"));
+
+        if (!audioInput.files[0]) {
+            markFieldError(audioDropZone);
+            firstInvalid = firstInvalid || audioDropZone;
+        }
+
+        const titleInput = document.getElementById("titleInput");
+        if (!titleInput.value.trim()) {
+            markFieldError(titleInput);
+            firstInvalid = firstInvalid || titleInput;
+        }
+
+        const artistInput = document.getElementById("artistInput");
+        if (!artistInput.value.trim()) {
+            markFieldError(artistInput);
+            firstInvalid = firstInvalid || artistInput;
+        }
+
+        return firstInvalid;
+    }
+
+    [
+        "titleInput", "artistInput"
+    ].forEach(id => {
+        document.getElementById(id).addEventListener("input", event => {
+            clearFieldError(event.target);
+        });
+    });
+
+    // --- Audio file handling ---
+
+    function formatFileSize(bytes) {
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    }
+
+    function formatDuration(seconds) {
+        if (!Number.isFinite(seconds)) return "";
+        const m = Math.floor(seconds / 60);
+        const s = Math.floor(seconds % 60).toString().padStart(2, "0");
+        return `${m}:${s}`;
+    }
 
     function handleAudioFile(file) {
 
@@ -274,6 +439,8 @@
         audioName.textContent =
         file.name;
 
+        clearFieldError(audioDropZone);
+
         const titleInput =
         document.getElementById("titleInput");
 
@@ -282,9 +449,25 @@
             titleInput.value =
             file.name.replace(/\.[^/.]+$/, "");
 
+            clearFieldError(titleInput);
+
         }
 
         status.textContent = "";
+
+        // Read duration via a throwaway audio element.
+        const probe = new Audio();
+        probe.preload = "metadata";
+        probe.src = URL.createObjectURL(file);
+
+        probe.addEventListener("loadedmetadata", () => {
+            audioMeta.textContent =
+            `${formatDuration(probe.duration)} · ${formatFileSize(file.size)}`;
+
+            audioMeta.classList.remove("hidden");
+
+            URL.revokeObjectURL(probe.src);
+        });
     }
 
     audioDropZone.addEventListener(
@@ -350,6 +533,55 @@
 
         }
         );
+
+    // --- Cover art: drag-and-drop + preview ---
+
+    function handleCoverFile(file) {
+
+        if (!file) return;
+
+        if (!file.type.startsWith("image/")) {
+            status.textContent = "Please choose an image file for artwork.";
+            return;
+        }
+
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        coverInput.files = dataTransfer.files;
+
+        coverName.textContent = file.name;
+
+        const url = URL.createObjectURL(file);
+        coverThumb.style.backgroundImage = `url("${url}")`;
+        coverThumb.classList.add("has-image");
+        coverThumb.textContent = "";
+    }
+
+    coverInput.addEventListener("change", () => {
+        handleCoverFile(coverInput.files[0]);
+    });
+
+    ["dragover"].forEach(evt => {
+        coverButton.addEventListener(evt, event => {
+            event.preventDefault();
+            coverButton.classList.add("dragging");
+        });
+    });
+
+    coverButton.addEventListener("dragleave", event => {
+        if (!coverButton.contains(event.relatedTarget)) {
+            coverButton.classList.remove("dragging");
+        }
+    });
+
+    coverButton.addEventListener("drop", event => {
+        event.preventDefault();
+        coverButton.classList.remove("dragging");
+        handleCoverFile(event.dataTransfer.files[0]);
+    });
+
+    // --- Lyrics: drag-and-drop ---
+
     lyricsInput.addEventListener("change", () => {
         const file = lyricsInput.files[0];
 
@@ -358,14 +590,151 @@
         }
     });
 
-    createButton.addEventListener("click", async () => {
+    ["dragover"].forEach(evt => {
+        lyricsButton.addEventListener(evt, event => {
+            event.preventDefault();
+            lyricsButton.classList.add("dragging");
+        });
+    });
 
-        const audioFile = audioInput.files[0];
+    lyricsButton.addEventListener("dragleave", event => {
+        if (!lyricsButton.contains(event.relatedTarget)) {
+            lyricsButton.classList.remove("dragging");
+        }
+    });
 
-        if (!audioFile) {
-            status.textContent = "Please choose an audio file first.";
+    lyricsButton.addEventListener("drop", event => {
+        event.preventDefault();
+        lyricsButton.classList.remove("dragging");
+
+        const file = event.dataTransfer.files[0];
+        if (!file) return;
+
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        lyricsInput.files = dataTransfer.files;
+
+        lyricsName.textContent = file.name;
+    });
+
+    // --- Comment character count ---
+
+    commentInput.addEventListener("input", () => {
+        commentCount.textContent = `${commentInput.value.length} / 500`;
+        saveDraft();
+    });
+
+    // --- Draft autosave (text fields only — files can't be persisted) ---
+
+    function saveDraft() {
+        const draft = {};
+
+        FIELD_IDS.forEach(id => {
+            draft[id] = document.getElementById(id).value;
+        });
+
+        draft.explicit = isToggled(explicitToggle);
+
+        try {
+            localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+        } catch (error) {
+            // Storage unavailable — not critical, just skip autosave.
+        }
+    }
+
+    function restoreDraft() {
+        let raw;
+
+        try {
+            raw = localStorage.getItem(DRAFT_KEY);
+        } catch (error) {
             return;
         }
+
+        if (!raw) return;
+
+        try {
+            const draft = JSON.parse(raw);
+
+            const hasContent = FIELD_IDS.some(id => draft[id]);
+            if (!hasContent) return;
+
+            FIELD_IDS.forEach(id => {
+                if (draft[id]) document.getElementById(id).value = draft[id];
+            });
+
+            if (draft.explicit) setToggle(explicitToggle, true);
+
+            commentCount.textContent = `${commentInput.value.length} / 500`;
+
+            status.textContent = "Restored your last unsaved draft.";
+
+        } catch (error) {
+            // Corrupt draft — ignore.
+        }
+    }
+
+    FIELD_IDS.forEach(id => {
+        document.getElementById(id).addEventListener("input", saveDraft);
+    });
+
+    restoreDraft();
+
+    // --- Clear form ---
+
+    clearButton.addEventListener("click", () => {
+
+        FIELD_IDS.forEach(id => {
+            document.getElementById(id).value = "";
+        });
+
+        audioInput.value = "";
+        coverInput.value = "";
+        lyricsInput.value = "";
+
+        audioName.textContent = "Drop an audio file here";
+        audioMeta.classList.add("hidden");
+
+        coverName.textContent = "Optional — drop or click";
+        coverThumb.style.backgroundImage = "";
+        coverThumb.classList.remove("has-image");
+        coverThumb.textContent = "🖼";
+
+        lyricsName.textContent = "Drop a .lrc file or click to browse";
+        lyricsButton.classList.add("hidden");
+        setToggle(lyricsToggle, false);
+
+        setToggle(explicitToggle, false);
+
+        commentCount.textContent = "0 / 500";
+
+        clearFieldError(audioDropZone);
+        clearFieldError(document.getElementById("titleInput"));
+        clearFieldError(document.getElementById("artistInput"));
+
+        status.textContent = "";
+
+        try {
+            localStorage.removeItem(DRAFT_KEY);
+        } catch (error) {
+            // Ignore.
+        }
+
+    });
+
+    // --- Create ---
+
+    createButton.addEventListener("click", async () => {
+
+        const invalidField = validateForm();
+
+        if (invalidField) {
+            status.textContent = "Please fill in the required fields marked with *.";
+            invalidField.scrollIntoView({ behavior: "smooth", block: "center" });
+            return;
+        }
+
+        const audioFile = audioInput.files[0];
 
         createButton.disabled = true;
         createButton.textContent = "Creating...";
@@ -375,7 +744,7 @@
             const audBlob = await createAUD({
                 audioFile,
                 coverFile: coverInput.files[0] || null,
-                lyricsFile: lyricsInput.files[0] || null,
+                lyricsFile: isToggled(lyricsToggle) ? (lyricsInput.files[0] || null) : null,
 
                 metadata: {
                     title: document.getElementById("titleInput").value,
@@ -410,7 +779,10 @@
                     document.getElementById("isrcInput").value,
 
                     comment:
-                    document.getElementById("commentInput").value
+                    document.getElementById("commentInput").value,
+
+                    explicit:
+                    isToggled(explicitToggle)
                 }
             });
 
@@ -424,6 +796,12 @@
             );
 
             status.textContent = "Your .aud file was created.";
+
+            try {
+                localStorage.removeItem(DRAFT_KEY);
+            } catch (error) {
+                // Ignore.
+            }
 
         } catch (error) {
 
